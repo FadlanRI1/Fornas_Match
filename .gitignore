@@ -1,0 +1,57 @@
+﻿# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Environment & Secrets ─────────────────────────────────────────────────────
+# JANGAN commit API key — simpan di .env lokal
+.env
+.env.*
+!.env.example
+
+# ── IDE & Editor ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Bob (IBM Bob workspace) ───────────────────────────────────────────────────
+# Sertakan konfigurasi Bob tapi abaikan cache internal
+.bob/tmp/
+.bob/cache/
+
+# ── Dataset (opsional — batalkan komentar jika dataset tidak boleh di-commit) ──
+# Dataset/
+
+# ── Log & temporary files ─────────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
+*.orig
+
+# ── uvicorn / FastAPI runtime ─────────────────────────────────────────────────
+*.pid

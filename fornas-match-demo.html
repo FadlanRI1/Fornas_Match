@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fornas Match — Demo Lokal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3F6F1;
+    --surface:#FFFFFF;
+    --ink:#1B2A22;
+    --ink-soft:#54615A;
+    --primary:#1C4B3D;
+    --primary-soft:#E3EEE8;
+    --amber:#8F6420;
+    --amber-soft:#F5EBD9;
+    --coral:#A83E27;
+    --coral-soft:#F6E4DF;
+    --muted:#767E76;
+    --muted-soft:#EAEDE9;
+    --border:#DBE2D8;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:28px 20px 80px;}
+
+  /* ── HEADER ── */
+  header{display:flex;align-items:flex-start;gap:14px;margin-bottom:6px;}
+  .mark{flex:none;width:44px;height:44px;margin-top:2px;}
+  h1{
+    font-family:'Fraunces', Georgia, serif;
+    font-weight:600;
+    font-size:1.75rem;
+    margin:0;
+    letter-spacing:-0.01em;
+    color:var(--primary);
+  }
+  .tagline{color:var(--ink-soft);font-size:0.92rem;margin-top:3px;}
+  .mode-badge{
+    display:inline-block;margin-top:10px;
+    font-size:0.72rem;font-weight:600;
+    padding:3px 9px;border-radius:100px;
+    background:var(--amber-soft);color:var(--amber);
+    border:1px solid rgba(143,100,32,0.25);
+  }
+
+  /* ── INPUT CARD ── */
+  .input-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+    margin-top:22px;
+  }
+  .input-card label{font-size:0.85rem;color:var(--ink-soft);display:block;margin-bottom:8px;font-weight:500;}
+  textarea{
+    width:100%;min-height:72px;resize:vertical;
+    font-family:inherit;font-size:0.95rem;color:var(--ink);
+    border:1px solid var(--border);border-radius:8px;
+    padding:10px 12px;background:#FCFDFB;
+    transition:border-color 0.15s, outline 0.15s;
+  }
+  textarea:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary);}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .chip{
+    font-size:0.82rem;padding:6px 12px;border-radius:100px;
+    border:1px solid var(--border);background:var(--muted-soft);
+    color:var(--ink);cursor:pointer;
+    transition:border-color 0.15s, color 0.15s, background 0.15s;
+    user-select:none;
+  }
+  .chip:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft);}
+  .chip.active{border-color:var(--primary);background:var(--primary-soft);color:var(--primary);font-weight:600;}
+
+  .btn-main{
+    margin-top:16px;width:100%;
+    background:var(--primary);color:#fff;border:none;
+    font-family:inherit;font-weight:600;font-size:0.95rem;
+    padding:12px;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:background 0.15s;
+  }
+  .btn-main:disabled{background:var(--muted);cursor:not-allowed;}
+  .btn-main:not(:disabled):hover{background:#163C31;}
+  .btn-main .spinner{
+    width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);
+    border-top-color:#fff;border-radius:50%;
+    animation:spin 0.7s linear infinite;
+    display:none;
+  }
+  .btn-main.loading .spinner{display:block;}
+  .btn-main.loading .btn-text::after{content:'';}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ── PIPELINE ── */
+  #pipeline{margin-top:28px;position:relative;}
+  .step{
+    display:flex;gap:14px;margin-bottom:4px;
+    opacity:0;transform:translateY(8px);
+    animation:reveal 0.4s ease forwards;
+  }
+  @keyframes reveal{to{opacity:1;transform:translateY(0);}}
+
+  .step-num{
+    flex:none;width:28px;height:28px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-size:0.78rem;font-weight:600;
+    background:var(--primary-soft);color:var(--primary);
+    position:relative;
+  }
+  .step-connector{
+    position:absolute;top:28px;left:13px;width:1px;
+    background:var(--border);
+  }
+  .step:last-child .step-connector{display:none;}
+  .step-body{flex:1;padding-bottom:28px;}
+
+  /* skeleton loading row */
+  .step-loading{
+    display:flex;gap:14px;margin-bottom:4px;
+    opacity:0;transform:translateY(8px);
+    animation:reveal 0.3s ease forwards;
+  }
+  .step-loading .step-num{background:var(--muted-soft);color:var(--muted);}
+  .skeleton{
+    flex:1;padding-bottom:28px;
+  }
+  .skel-bar{
+    height:72px;background:linear-gradient(90deg,var(--muted-soft) 25%,#dfe3dc 50%,var(--muted-soft) 75%);
+    background-size:200% 100%;
+    animation:shimmer 1.2s infinite;
+    border-radius:var(--radius);
+  }
+  @keyframes shimmer{to{background-position:-200% 0;}}
+
+  .card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px 16px;
+  }
+  .card-title{font-weight:600;font-size:0.95rem;margin-bottom:6px;display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
+  .card-text{font-size:0.9rem;color:var(--ink-soft);}
+  .badge{
+    display:inline-block;font-size:0.72rem;font-weight:600;
+    padding:2px 8px;border-radius:100px;
+  }
+  .badge-ok{background:var(--primary-soft);color:var(--primary);}
+  .badge-warn{background:var(--coral-soft);color:var(--coral);}
+  .badge-muted{background:var(--muted-soft);color:var(--muted);}
+
+  .dose-line{
+    font-family:'IBM Plex Mono',monospace;font-size:0.95rem;font-weight:600;
+    background:var(--primary-soft);color:var(--primary);
+    display:inline-block;padding:6px 12px;border-radius:6px;margin-top:8px;
+  }
+  .warn-box{
+    margin-top:10px;padding:10px 12px;border-radius:8px;
+    background:var(--coral-soft);color:var(--coral);font-size:0.85rem;
+    border-left:3px solid var(--coral);
+  }
+  .muted-box{
+    margin-top:10px;padding:10px 12px;border-radius:8px;
+    background:var(--muted-soft);color:var(--ink-soft);font-size:0.85rem;
+    border-left:3px solid var(--muted);
+  }
+
+  /* ── PIO ── */
+  .pio-card{border-color:var(--primary);border-width:1.5px;}
+  .pio-text{
+    font-size:0.92rem;white-space:pre-line;margin-top:8px;
+    background:#FBFCFA;border:1px solid var(--border);border-radius:8px;
+    padding:12px;line-height:1.65;
+  }
+  .gate{
+    margin-top:14px;padding:12px;border-radius:8px;
+    background:var(--amber-soft);border:1px solid rgba(143,100,32,0.25);
+  }
+  .gate label{display:flex;align-items:center;gap:8px;font-size:0.88rem;color:var(--amber);font-weight:600;cursor:pointer;}
+  .gate input{width:16px;height:16px;accent-color:var(--primary);}
+  .send-btn{
+    margin-top:10px;width:100%;padding:10px;border-radius:8px;border:none;
+    font-family:inherit;font-weight:600;font-size:0.9rem;cursor:pointer;
+    background:var(--muted);color:#fff;
+    transition:background 0.15s;
+  }
+  .send-btn.ready{background:var(--primary);cursor:pointer;}
+  .send-btn.ready:hover{background:#163C31;}
+  .send-btn:disabled{cursor:not-allowed;opacity:0.7;}
+  .sent-banner{
+    margin-top:10px;padding:10px 12px;border-radius:8px;
+    background:var(--primary-soft);border:1px solid var(--primary);
+    font-size:0.88rem;color:var(--primary);font-weight:600;
+    display:none;
+  }
+
+  /* ── MODE TOGGLE ── */
+  .mode-toggle{
+    display:flex;align-items:center;gap:10px;
+    margin-top:14px;padding:10px 14px;border-radius:8px;
+    background:var(--muted-soft);border:1px solid var(--border);
+  }
+  .mode-toggle label{font-size:0.82rem;color:var(--ink-soft);font-weight:500;flex:1;}
+  .toggle-wrap{display:flex;align-items:center;gap:8px;font-size:0.8rem;font-weight:600;}
+  .toggle-wrap span{color:var(--muted);}
+  .toggle-wrap span.on{color:var(--primary);}
+  /* switch */
+  .switch{position:relative;display:inline-block;width:36px;height:20px;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{
+    position:absolute;inset:0;background:var(--muted);border-radius:20px;cursor:pointer;
+    transition:background 0.2s;
+  }
+  .slider::before{
+    content:'';position:absolute;width:14px;height:14px;
+    left:3px;bottom:3px;background:#fff;border-radius:50%;
+    transition:transform 0.2s;
+  }
+  .switch input:checked + .slider{background:var(--primary);}
+  .switch input:checked + .slider::before{transform:translateX(16px);}
+
+  /* ── RESET BTN ── */
+  .reset-row{
+    margin-top:4px;padding-bottom:28px;
+    opacity:0;transform:translateY(8px);
+    animation:reveal 0.4s ease forwards;
+  }
+  .reset-btn{
+    width:100%;padding:10px;border-radius:8px;
+    border:1.5px solid var(--border);background:transparent;
+    font-family:inherit;font-weight:600;font-size:0.88rem;
+    color:var(--ink-soft);cursor:pointer;
+    transition:border-color 0.15s,color 0.15s;
+  }
+  .reset-btn:hover{border-color:var(--primary);color:var(--primary);}
+
+  /* ── FOOTER ── */
+  footer{margin-top:36px;font-size:0.78rem;color:var(--muted);text-align:center;line-height:1.8;}
+  footer a{color:var(--muted);text-decoration:none;border-bottom:1px dashed var(--border);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <!-- Cross / Plus mark — representing "Fornas" health + check -->
+    <svg class="mark" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="44" height="44" rx="10" fill="#E3EEE8"/>
+      <rect x="18" y="8" width="8" height="28" rx="3" fill="#1C4B3D"/>
+      <rect x="8" y="18" width="28" height="8" rx="3" fill="#1C4B3D"/>
+    </svg>
+    <div>
+      <h1>Fornas Match</h1>
+      <div class="tagline">Bantu apoteker cocokkan obat saat stok BPJS kosong</div>
+      <span class="mode-badge" id="modeBadge">Mode Demo Lokal — data contoh</span>
+    </div>
+  </header>
+
+  <div class="input-card">
+    <label for="kasus">Ketik kasus dari resep, atau pilih contoh di bawah:</label>
+    <textarea id="kasus" placeholder="Contoh: pasien resep amoxicillin 500mg tablet, tapi stok hanya kapsul 250mg…"></textarea>
+    <div class="chips">
+      <div class="chip" data-key="parasetamol">💊 Parasetamol — kasus normal</div>
+      <div class="chip" data-key="insulin">🩸 Insulin glargine — data terbatas</div>
+      <div class="chip" data-key="amoxicillin">⚗️ Amoxicillin — beda kekuatan</div>
+    </div>
+    <div class="mode-toggle">
+      <label for="liveToggle">🔌 Mode koneksi ke Langflow (server.py harus berjalan di port 8000)</label>
+      <div class="toggle-wrap">
+        <span id="lblDemo" class="on">Demo</span>
+        <label class="switch">
+          <input type="checkbox" id="liveToggle">
+          <span class="slider"></span>
+        </label>
+        <span id="lblLive">Live</span>
+      </div>
+    </div>
+    <button class="btn-main" id="prosesBtn">
+      <div class="spinner"></div>
+      <span class="btn-text">Proses Kasus</span>
+    </button>
+  </div>
+
+  <div id="pipeline"></div>
+
+  <footer>
+    Fornas Match — prototipe hackathon &nbsp;|&nbsp; data demo bukan data medis resmi<br>
+    <span style="font-size:0.72rem;">Sumber referensi: Formularium Nasional (Fornas) BPJS Kesehatan · 663 item</span>
+  </footer>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   CONFIG
+───────────────────────────────────────────── */
+const PROXY = 'http://localhost:8000';   // python server.py
+
+/* ─────────────────────────────────────────────
+   SCENARIO DATA
+───────────────────────────────────────────── */
+const SCENARIOS = {
+  parasetamol: {
+    label: "Pasien resep Parasetamol tablet 500mg, stok tersedia?",
+    fornas: {
+      badge: "Tier 1 — data lengkap", badgeClass: "badge-ok",
+      text: "Parasetamol termasuk Fornas dan ditanggung <strong>penuh</strong> oleh BPJS Kesehatan. Merek yang beredar antara lain <em>Panadol, Sanmol,</em> dan <em>Tempra</em>."
+    },
+    stok: {
+      badge: "Tersedia", badgeClass: "badge-ok",
+      text: "Tablet 500mg (Panadol) — stok <strong>80 unit</strong>, status Tersedia. Sesuai dengan resep, tidak perlu substitusi."
+    },
+    dosis: { skip: true, text: "Tidak perlu konversi — sediaan yang tersedia sama persis dengan resep." },
+    pio: {
+      antibiotik: false,
+      needsConfirm: false,
+      text: "Ibu/Bapak, ini Parasetamol tablet 500mg (Panadol).\n\nDiminum 1 tablet saat demam atau nyeri, maksimal 3 kali sehari. Sebaiknya diminum sesudah makan atau bersama susu agar tidak mengiritasi lambung.\n\nJangan melebihi 8 tablet dalam 24 jam."
+    }
+  },
+
+  insulin: {
+    label: "Insulin glargine ditanggung BPJS? Ada mereknya?",
+    fornas: {
+      badge: "Tier 2 — data terbatas", badgeClass: "badge-muted",
+      text: "Analog insulin basal (insulin glargine) tercatat di Fornas dan <strong>ditanggung BPJS</strong>. Namun data merek dagang untuk item ini belum lengkap di sistem kami."
+    },
+    stok: {
+      badge: "Data belum tersedia", badgeClass: "badge-muted",
+      text: "Data stok untuk item Tier 2 belum ada di database demo ini. Perlu pengecekan manual ke instalasi farmasi."
+    },
+    dosis: { skip: true, muted: true, text: "Tidak bisa dilanjutkan otomatis — item ini perlu ditangani manual oleh apoteker." },
+    pio: {
+      blocked: true,
+      text: "PIO tidak dapat dibuat otomatis untuk item Tier 2 yang datanya belum lengkap.\n\nSilakan lakukan verifikasi manual ke apoteker senior atau cek Pionas BPOM sebelum memberikan informasi ke pasien."
+    }
+  },
+
+  amoxicillin: {
+    label: "Resep Amoxicillin 500mg tablet, 3×1 selama 7 hari — stok hanya kapsul 250mg",
+    fornas: {
+      badge: "Tier 1 — data lengkap", badgeClass: "badge-ok",
+      text: "Amoxicillin termasuk Fornas, ditanggung <strong>penuh</strong> oleh BPJS Kesehatan. Merek yang beredar antara lain <em>Amoxsan</em> dan <em>Yusimox</em>."
+    },
+    stok: {
+      badge: "Beda sediaan", badgeClass: "badge-warn",
+      text: "Tablet 500mg — <strong style='color:var(--coral)'>Kosong</strong>.<br>Kapsul 250mg (Amoxsan) — <strong style='color:var(--primary)'>Tersedia</strong>, stok 60 unit."
+    },
+    dosis: {
+      skip: false,
+      calc: "500 mg ÷ 250 mg = 2 kapsul per minum",
+      note: "Hasil bulat — aman disesuaikan tanpa racikan khusus.",
+      antibiotik: true
+    },
+    pio: {
+      antibiotik: true,
+      needsConfirm: true,
+      text: "Ibu/Bapak, di resep dokter tertulis Amoxicillin 500mg tablet, tapi yang tersedia di apotek kami Amoxicillin 250mg kapsul.\n\nJadi setiap kali minum, Ibu/Bapak minum 2 kapsul ini ya, agar dosisnya tetap sama dengan resep dokter.\n\nDiminum 3 kali sehari setiap 8 jam, sebaiknya setelah makan.\n\n⚠️ Penting: ini antibiotik — harus dihabiskan seluruhnya selama 7 hari meski gejala sudah membaik."
+    }
+  }
+};
+
+/* ─────────────────────────────────────────────
+   DOM REFS
+───────────────────────────────────────────── */
+const pipeline   = document.getElementById('pipeline');
+const textarea   = document.getElementById('kasus');
+const prosesBtn  = document.getElementById('prosesBtn');
+const liveToggle = document.getElementById('liveToggle');
+const modeBadge  = document.getElementById('modeBadge');
+const lblDemo    = document.getElementById('lblDemo');
+const lblLive    = document.getElementById('lblLive');
+
+/* ─────────────────────────────────────────────
+   MODE TOGGLE
+───────────────────────────────────────────── */
+function isLive(){ return liveToggle.checked; }
+
+liveToggle.addEventListener('change', () => {
+  if (isLive()) {
+    modeBadge.textContent = '🟢 Mode Live — terhubung ke Langflow';
+    modeBadge.style.background = 'var(--primary-soft)';
+    modeBadge.style.color = 'var(--primary)';
+    modeBadge.style.borderColor = 'rgba(28,75,61,0.25)';
+    lblDemo.classList.remove('on');
+    lblLive.classList.add('on');
+    lblLive.style.color = 'var(--primary)';
+  } else {
+    modeBadge.textContent = 'Mode Demo Lokal — data contoh';
+    modeBadge.style.background = '';
+    modeBadge.style.color = '';
+    modeBadge.style.borderColor = '';
+    lblDemo.classList.add('on');
+    lblLive.classList.remove('on');
+    lblLive.style.color = '';
+  }
+});
+
+/* ─────────────────────────────────────────────
+   LIVE API CALLS
+───────────────────────────────────────────── */
+async function callProxy(endpoint, inputValue, sessionId){
+  const res = await fetch(`${PROXY}${endpoint}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input_value: inputValue, session_id: sessionId })
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => res.statusText);
+    throw new Error(`[${res.status}] ${err.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  return data.result ?? JSON.stringify(data);
+}
+
+/* ─────────────────────────────────────────────
+   CHIP SELECTION
+───────────────────────────────────────────── */
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    const key = chip.dataset.key;
+    textarea.value = SCENARIOS[key].label;
+    textarea.dataset.key = key;
+  });
+});
+
+// manual typing clears the active chip & key
+textarea.addEventListener('input', () => {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  delete textarea.dataset.key;
+});
+
+/* ─────────────────────────────────────────────
+   PROCESS BUTTON
+───────────────────────────────────────────── */
+prosesBtn.addEventListener('click', () => {
+  const text = textarea.value.toLowerCase().trim();
+  if (!text) { shakeInput(); return; }
+
+  if (isLive()) {
+    runPipelineLive(textarea.value.trim());
+    return;
+  }
+
+  // ── Demo mode ──
+  let key = textarea.dataset.key;
+  if (!key) {
+    if (text.includes('parasetamol') || text.includes('paracetamol')) key = 'parasetamol';
+    else if (text.includes('insulin')) key = 'insulin';
+    else if (text.includes('amox')) key = 'amoxicillin';
+  }
+  if (!key || !SCENARIOS[key]) {
+    showAlert('Kasus ini belum ada di data demo lokal. Di versi live, aktifkan toggle Live di atas.\n\nAtau pilih salah satu contoh di atas.');
+    return;
+  }
+  runPipeline(SCENARIOS[key]);
+});
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function shakeInput(){
+  textarea.style.outline = '2px solid var(--coral)';
+  textarea.style.borderColor = 'var(--coral)';
+  setTimeout(() => { textarea.style.outline=''; textarea.style.borderColor=''; }, 1200);
+  textarea.placeholder = 'Ketik kasus atau pilih contoh di atas terlebih dahulu…';
+}
+
+function showAlert(msg){
+  // inline alert styled
+  const old = document.getElementById('inline-alert');
+  if (old) old.remove();
+  const div = document.createElement('div');
+  div.id = 'inline-alert';
+  div.style.cssText = 'margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--amber-soft);border:1px solid rgba(143,100,32,0.3);color:var(--amber);font-size:0.86rem;';
+  div.textContent = msg;
+  prosesBtn.parentElement.insertBefore(div, prosesBtn.nextSibling);
+  setTimeout(() => div.remove(), 5000);
+}
+
+/* build a skeleton (loading) row */
+function skeletonEl(num){
+  const el = document.createElement('div');
+  el.className = 'step-loading';
+  el.innerHTML = `
+    <div class="step-num" style="background:var(--muted-soft);color:var(--muted);">${num}</div>
+    <div class="skeleton"><div class="skel-bar"></div></div>`;
+  return el;
+}
+
+/* build a real step card */
+function stepEl(num, title, bodyHtml, connectorHeight){
+  const el = document.createElement('div');
+  el.className = 'step';
+  el.innerHTML = `
+    <div class="step-num">${num}<div class="step-connector" style="height:${connectorHeight}px;"></div></div>
+    <div class="step-body">
+      <div class="card">
+        <div class="card-title">${title}</div>
+        ${bodyHtml}
+      </div>
+    </div>`;
+  return el;
+}
+
+/* ─────────────────────────────────────────────
+   PIPELINE RUNNER
+───────────────────────────────────────────── */
+function runPipeline(sc){
+  // clear
+  pipeline.innerHTML = '';
+  const old = document.getElementById('inline-alert');
+  if (old) old.remove();
+
+  // disable button, show spinner
+  prosesBtn.disabled = true;
+  prosesBtn.classList.add('loading');
+  prosesBtn.querySelector('.btn-text').textContent = 'Memproses…';
+
+  /* We'll reveal steps one by one with skeletons */
+  const DELAY  = 750;   // ms between steps
+  const SETTLE = 450;   // ms skeleton shows before real card
+
+  function revealStep(num, title, bodyHtml, onDone){
+    const skel = skeletonEl(num);
+    pipeline.appendChild(skel);
+    skel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+    setTimeout(() => {
+      skel.remove();
+      // estimate connector height based on card content length (rough)
+      const el = stepEl(num, title, bodyHtml, 90);
+      pipeline.appendChild(el);
+      el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      if (onDone) setTimeout(onDone, 80);
+    }, SETTLE);
+  }
+
+  /* ── Step 1: Fornas ── */
+  setTimeout(() => {
+    revealStep(1,
+      `Cek Fornas <span class="badge ${sc.fornas.badgeClass}">${sc.fornas.badge}</span>`,
+      `<div class="card-text">${sc.fornas.text}</div>`,
+      null
+    );
+  }, 0);
+
+  /* ── Step 2: Stok ── */
+  setTimeout(() => {
+    revealStep(2,
+      `Cek Stok <span class="badge ${sc.stok.badgeClass}">${sc.stok.badge}</span>`,
+      `<div class="card-text">${sc.stok.text}</div>`,
+      null
+    );
+  }, DELAY);
+
+  /* ── Step 3: Dosis ── */
+  setTimeout(() => {
+    let body;
+    if (sc.dosis.skip) {
+      body = `<div class="${sc.dosis.muted ? 'muted-box' : 'card-text'}">${sc.dosis.text}</div>`;
+    } else {
+      body = `<div class="card-text">Dosis yang diresepkan berbeda dengan kekuatan sediaan yang tersedia.</div>
+              <div class="dose-line">${sc.dosis.calc}</div>
+              <div class="card-text" style="margin-top:8px;">${sc.dosis.note}</div>`;
+      if (sc.dosis.antibiotik) {
+        body += `<div class="warn-box">🔴 Golongan Antibiotik — wajib ada resep dokter valid, dan obat harus dihabiskan sesuai jadwal.</div>`;
+      }
+    }
+    revealStep(3, 'Hitung Kesetaraan Dosis', body, null);
+  }, DELAY * 2);
+
+  /* ── Step 4: PIO ── */
+  setTimeout(() => {
+    let body, onDone = null;
+
+    if (sc.pio.blocked) {
+      body = `<div class="muted-box">${sc.pio.text}</div>`;
+      revealStep(4, 'Draf PIO', body, () => finishPipeline(false));
+      return;
+    }
+
+    const gateId = 'gate_' + Date.now();
+    const sendId = 'send_' + Date.now();
+    const noteId = sendId + '_note';
+
+    let gateHtml = '';
+    if (sc.pio.needsConfirm) {
+      gateHtml = `
+        <div class="gate">
+          <label><input type="checkbox" id="${gateId}"> Sudah dikonfirmasi ke dokter peresep</label>
+        </div>
+        <button class="send-btn" id="${sendId}" disabled>Kirim PIO ke Pasien</button>
+        <div class="sent-banner" id="${noteId}">✅ PIO berhasil dikirim ke pasien.</div>`;
+    } else {
+      gateHtml = `
+        <button class="send-btn ready" id="${sendId}">Kirim PIO ke Pasien</button>
+        <div class="sent-banner" id="${noteId}">✅ PIO berhasil dikirim ke pasien.</div>`;
+    }
+
+    body = `<div class="pio-text">${sc.pio.text}</div>${gateHtml}`;
+
+    revealStep(4, 'Draf PIO', body, () => {
+      const stepCard = pipeline.querySelector('.step:last-child .card');
+      if (stepCard) stepCard.classList.add('pio-card');
+
+      if (sc.pio.needsConfirm) {
+        const gate = document.getElementById(gateId);
+        const send = document.getElementById(sendId);
+        gate.addEventListener('change', () => {
+          send.disabled = !gate.checked;
+          send.classList.toggle('ready', gate.checked);
+        });
+      }
+
+      const sendBtn = document.getElementById(sendId);
+      sendBtn.addEventListener('click', () => {
+        sendBtn.style.display = 'none';
+        document.getElementById(noteId).style.display = 'block';
+      });
+
+      finishPipeline(true);
+    });
+  }, DELAY * 3);
+}
+
+/* ─────────────────────────────────────────────
+   FINISH
+───────────────────────────────────────────── */
+function finishPipeline(showReset){
+  // re-enable process button
+  prosesBtn.disabled = false;
+  prosesBtn.classList.remove('loading');
+  prosesBtn.querySelector('.btn-text').textContent = 'Proses Kasus Baru';
+
+  if (showReset) {
+    setTimeout(() => {
+      const row = document.createElement('div');
+      row.className = 'reset-row';
+      row.innerHTML = `<button class="reset-btn" id="resetBtn">↩ Mulai ulang dengan kasus lain</button>`;
+      pipeline.appendChild(row);
+      row.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      document.getElementById('resetBtn').addEventListener('click', resetAll);
+    }, 300);
+  }
+}
+
+function resetAll(){
+  pipeline.innerHTML = '';
+  textarea.value = '';
+  delete textarea.dataset.key;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  prosesBtn.querySelector('.btn-text').textContent = 'Proses Kasus';
+  window.scrollTo({ top: 0, behavior:'smooth' });
+}
+
+/* ─────────────────────────────────────────────
+   LIVE PIPELINE (calls proxy → Langflow)
+───────────────────────────────────────────── */
+async function runPipelineLive(inputText){
+  pipeline.innerHTML = '';
+  const old = document.getElementById('inline-alert');
+  if (old) old.remove();
+
+  prosesBtn.disabled = true;
+  prosesBtn.classList.add('loading');
+  prosesBtn.querySelector('.btn-text').textContent = 'Menghubungi Langflow…';
+
+  const sessionId = 'demo_' + Date.now();
+
+  /* helper: show skeleton then replace with real card */
+  function showSkel(num){
+    const skel = skeletonEl(num);
+    pipeline.appendChild(skel);
+    skel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    return skel;
+  }
+  function replaceSkel(skel, num, title, bodyHtml){
+    skel.remove();
+    const el = stepEl(num, title, bodyHtml, 90);
+    pipeline.appendChild(el);
+    el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    return el;
+  }
+  function errBody(msg){
+    return `<div class="warn-box">❌ ${msg}</div>`;
+  }
+
+  try {
+    /* ── Step 1: Fornas ── */
+    let s1 = showSkel(1);
+    let r1;
+    try {
+      r1 = await callProxy('/api/cek_fornas', inputText, sessionId);
+    } catch(e){ r1 = null; }
+    replaceSkel(s1, 1, 'Cek Fornas',
+      r1 ? `<div class="card-text">${escHtml(r1)}</div>`
+         : errBody('Tidak bisa menghubungi Langflow — pastikan server.py berjalan.'));
+
+    /* ── Step 2: Stok ── */
+    let s2 = showSkel(2);
+    let r2;
+    try {
+      r2 = await callProxy('/api/cek_stok', inputText, sessionId);
+    } catch(e){ r2 = null; }
+    replaceSkel(s2, 2, 'Cek Stok',
+      r2 ? `<div class="card-text">${escHtml(r2)}</div>`
+         : errBody('Gagal menghubungi endpoint stok.'));
+
+    /* ── Step 3: Dosis ── */
+    let s3 = showSkel(3);
+    let r3;
+    try {
+      r3 = await callProxy('/api/hitung_dosis', inputText, sessionId);
+    } catch(e){ r3 = null; }
+    replaceSkel(s3, 3, 'Hitung Kesetaraan Dosis',
+      r3 ? `<div class="card-text">${escHtml(r3)}</div>`
+         : errBody('Gagal menghitung kesetaraan dosis.'));
+
+    /* ── Step 4: PIO ── */
+    let s4 = showSkel(4);
+    let r4;
+    try {
+      r4 = await callProxy('/api/generate_pio', inputText, sessionId);
+    } catch(e){ r4 = null; }
+
+    const sendId = 'send_' + Date.now();
+    const noteId = sendId + '_note';
+    const pioBody = r4
+      ? `<div class="pio-text">${escHtml(r4)}</div>
+         <button class="send-btn ready" id="${sendId}">Kirim PIO ke Pasien</button>
+         <div class="sent-banner" id="${noteId}">✅ PIO berhasil dikirim ke pasien.</div>`
+      : errBody('Gagal membuat draf PIO.');
+
+    const el4 = replaceSkel(s4, 4, 'Draf PIO', pioBody);
+    el4.querySelector('.card').classList.add('pio-card');
+
+    if (r4) {
+      document.getElementById(sendId).addEventListener('click', () => {
+        document.getElementById(sendId).style.display = 'none';
+        document.getElementById(noteId).style.display = 'block';
+      });
+    }
+
+  } catch(err){
+    const errEl = document.createElement('div');
+    errEl.style.cssText = 'padding:12px;border-radius:8px;background:var(--coral-soft);color:var(--coral);font-size:0.88rem;margin-top:8px;';
+    errEl.textContent = '❌ Error tidak terduga: ' + err.message;
+    pipeline.appendChild(errEl);
+  }
+
+  finishPipeline(true);
+}
+
+/* escape HTML for safe text rendering from API */
+function escHtml(str){
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>');
+}
+</script>
+</body>
+</html>

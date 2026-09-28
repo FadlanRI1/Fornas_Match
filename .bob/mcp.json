@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "langflow": {
+      "url": "http://localhost:7860/api/v1/mcp/sse",
+      "headers": {
+        "x-api-key": "sk-ttBvabWi0y8reXsSWahpL6lCsEP95RT6VDQ_pKFI3Mo"
+      },
+      "disabled": true,
+      "disabledTools": [
+        "new_flow",
+        "ask_your_documents_for_insight",
+        "ask_your_documents_for_insig_1",
+        "ask_your_documents_for_insig_2",
+        "ask_your_documents_for_insig_3",
+        "ask_your_documents_for_insig_4",
+        "ask_your_documents_for_insig_5",
+        "sentiment_analysis_starter",
+        "new_flow_1"
+      ]
+    }
+  }
+}
